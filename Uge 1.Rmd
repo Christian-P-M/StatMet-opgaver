@@ -1,0 +1,45 @@
+---
+title: "Opgaver uge 1"
+author: "Christian Præst Møller"
+date: "2025-11-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+#(1)
+
+#(2)
+summary(cats)
+
+#(3)
+cats <- cats |>
+  select(Sex,Bwt,Hwt)|>
+  mutate(pct = Hwt / (Bwt*1000))
+summary(cats)
+
+#(4)
+hunner <- cats |> filter(Sex=="F")
+hanner <- cats |> filter(Sex=="M")
+summary(hunner)
+
+#(5)
+hunner |>
+  summarize(Bwt=mean(Bwt),Bwtsd=sd(Bwt),Hwt=mean(Hwt),Hwtsd=sd(Hwt),pct=mean(pct),pctsd=sd(pct))
+
+hanner |>
+  summarize(Bwt=mean(Bwt),Bwtsd=sd(Bwt),Hwt=mean(Hwt),Hwtsd=sd(Hwt),pct=mean(pct),pctsd=sd(pct))
+
+
+#NOter til imorgen, spredningen virker ikke ved oprigtigt ikke hvorfor
+
+
+
+
+```
+
