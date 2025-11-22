@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Hele Opgave 1.13
 ```{r}
 library(tidyverse)
 library(dplyr)
@@ -30,16 +31,85 @@ summary(hunner)
 
 #(5)
 hunner |>
-  summarize(Bwt=mean(Bwt),Bwtsd=sd(Bwt),Hwt=mean(Hwt),Hwtsd=sd(Hwt),pct=mean(pct),pctsd=sd(pct))
+  summarize(mean(Bwt),sd(Bwt),mean(Hwt),sd(Hwt),mean(pct),sd(pct))
 
 hanner |>
-  summarize(Bwt=mean(Bwt),Bwtsd=sd(Bwt),Hwt=mean(Hwt),Hwtsd=sd(Hwt),pct=mean(pct),pctsd=sd(pct))
+ summarize(mean(Bwt),sd(Bwt),mean(Hwt),sd(Hwt),mean(pct),sd(pct))
+
+cats |>
+  group_by(Sex) |>
+  summarize(mean(Bwt),sd(Bwt),mean(Hwt),sd(Hwt),mean(pct),sd(pct))
 
 
-#NOter til imorgen, spredningen virker ikke ved oprigtigt ikke hvorfor
+```
+
+Opgave 1.14
+```{r (1)}
+#(1) Indlæst med readr
+library(readr)
+balloon <- read_table("data/data/balloon.txt", 
+    col_types = cols(Farve = col_factor(levels = c("blaa", 
+        "rod", "orange", "gul")), X4 = col_skip()))
+View(balloon)
+
+```
+```{r (2)}
+balloon |>
+  group_by(Farve) |>
+  summarize(mean(Tid),sd(Tid))
+```
+
+ Opgave 1.15
+```{r (1)}
+targets <- read_csv("data/data/targets.csv")
+
+drug_compounds <- read_csv("data/data/drug_compounds.csv")
+
+drug_compounds$pubmed_id <- factor(drug_compounds$pubmed_id)
 
 
 
 
 ```
+```{r (2)}
+library(stringr)
+targets <- targets |>
+  mutate(length=str_length(targets$seq))
+view(targets)
+```
+ 
+```{r (3)}
+targets <- targets |>
+  mutate(length_nyt=str_length(str_remove(targets$seq, "\n")))
+view(targets)
 
+```
+
+```{r (4)}
+venstre <- left_join(drug_compounds,targets)
+højre <- right_join(drug_compounds,targets)
+view(venstre)
+view(højre)
+#Højre er væsentligt større, da de overskydende værdier i targets bliver smidt ud af left_join
+
+```
+
+Opgave 1.16
+```{r (1)}
+ggplot(data=hanner, mapping = aes(x = Bwt))+geom_histogram()
+ggplot(data=hanner, mapping = aes(x = Bwt))+geom_boxplot()
+ggplot(data=hunner, mapping = aes(x = Bwt))+geom_histogram()
+ggplot(data=hunner, mapping = aes(x = Bwt))+geom_boxplot()
+
+ggplot(data=cats, mapping = aes(x = Bwt, color=Sex))+geom_histogram()
+ggplot(data=cats, mapping = aes(y = Bwt, color=Sex))+geom_boxplot()
+  
+ggplot(data=cats, mapping = aes(x = Bwt))+geom_histogram()+facet_wrap("Sex")
+ggplot(data=cats, mapping = aes(y = Bwt))+geom_boxplot()+facet_wrap("Sex")
+```
+```{r (2)}
+ggplot(data=cats, mapping = aes(x = Bwt))+aes(y=Hwt)+geom_point()+geom_smooth()+facet_wrap("Sex")
+```
+
+
+ 
