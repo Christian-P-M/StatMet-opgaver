@@ -1,0 +1,34 @@
+---
+title: "Untitled"
+author: "Christian Præst Møller"
+date: "2025-12-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Opgave 2.15
+```{r}
+library(readr)
+survey <- read_csv("data/data/survey.csv")
+library(tidyverse)
+
+survey|>
+  summarise(mean(tvhours),median(tvhours),sd(tvhours),IQR(tvhours))
+ggplot(data=survey, mapping = aes(x = tvhours))+geom_histogram()
+
+```
+
+```{r}
+library(readr)
+survey <- read_csv("data/data/survey.csv")
+library(tidyverse)
+
+survey|>
+  specify(tvhours) |>
+  generate(reps=50,type = "bootstrap") |>
+  calculate(Test= "mean")
+```
+
