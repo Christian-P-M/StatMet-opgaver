@@ -16,11 +16,27 @@ neuron <- read_csv("data/data/neuron.txt",
     col_names = FALSE)
 
 library(tidyverse)
+library(infer)
+
+
+hmm <- neuron |>
+  specify(response = X1)|>
+  generate(reps = 1000, type  = "bootstrap")
+ 
+hmm|>
+  group_by(replicate)|>
+  summarise(parameter = sd(x)/mean(x)-1)  
+
+
+
 
 cvme <- neuron |>
-  ?
-hypothesise()
-
+  specify(response = X1)|>
+  generate(reps = 1000, type  = "bootstrap")
+ 
+cvme|>
+  group_by(replicate)|>
+  summarise(parameter = sd(x)/mean(x)-1)
 
 ```
 
