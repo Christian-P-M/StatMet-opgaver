@@ -67,9 +67,6 @@ drug_compounds <- read_csv("data/data/drug_compounds.csv")
 
 drug_compounds$pubmed_id <- factor(drug_compounds$pubmed_id)
 
-
-
-
 ```
 ```{r (2)}
 library(stringr)

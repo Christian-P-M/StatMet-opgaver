@@ -1,0 +1,817 @@
+---
+title: "Kode fra Forelæser"
+author: "Christian Præst Møller"
+date: "2025-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Direkte bøffede fra filerne oploadet til absalon.
+
+Setting up R
+To access the help files in R studio use: ??ggplot
+
+```{r}
+library(tidyverse)
+
+```
+
+
+```{r}
+library(nycflights13)
+theme_set(theme_bw())
+```
+
+A histogram
+
+```{r}
+temperature <- filter(weather, origin=="EWR") %>%
+  select(c("month","temp"))
+ggplot(data=temperature,  mapping = aes(x = temp)) +
+  geom_histogram()
+```
+
+Histogram modifications
+Note that NRH used ..density.. whcih is replaced with after_stat(density) here.
+
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp, y = after_stat(density))) +
+  geom_histogram(bins = 40, color = "white", fill = "steelblue") +
+  xlab("Temperature (F)")
+```
+
+Filtering and a rug plot
+```{r}
+filter(temperature, month == 1) %>%
+ggplot(mapping = aes(x = temp)) +
+  geom_histogram(bins = 40, color = "white", fill = "steelblue") +
+  geom_rug(aes(x = jitter(temp, 10)), alpha = 0.3) +
+  xlab("Temperature (F)")
+```
+
+Producing subplots using facet_wrap
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp)) +
+  geom_histogram(bins = 20, color = "white", fill = "steelblue") +
+  facet_wrap("month")
+```
+
+Stratification using facet_wrap
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp)) +
+  geom_histogram(bins = 20, color = "white", fill = "steelblue") +
+  facet_wrap("month", ncol = 12) + 
+  coord_flip()
+```
+
+Density plots instead of histograms
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp)) +
+  geom_density(color = "white", fill = "steelblue") +
+  facet_wrap("month", ncol = 12) + 
+  coord_flip()
+```
+
+Empirical distribution functions
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp)) +
+  stat_ecdf() +
+  geom_rug(aes(x = jitter(temp, 10)), alpha = 0.3)
+```
+
+Stratification by color
+Note: Month is perceived as a numerical value
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp, color = month)) +
+  stat_ecdf() +
+  geom_rug(aes(x = jitter(temp, 10)), alpha = 0.3)
+```
+
+Stratification by color - factor
+Note: We factorize month
+```{r}
+ggplot(data=temperature,  mapping = aes(x = temp, color = factor(month))) +
+  stat_ecdf() +
+  geom_rug(aes(x = jitter(temp, 10)), alpha = 0.3)
+```
+
+A boxplot
+```{r}
+ggplot(data=temperature,  mapping = aes(x = factor(month), y = temp)) +
+  geom_boxplot()
+```
+
+Scatterplots
+```{r}
+Alaska_flights <- filter(flights, carrier =="AS")
+ggplot(Alaska_flights, aes(dep_delay, arr_delay)) + 
+  geom_point()
+```
+
+Måder at splitte histogrammer op for at se dataen.
+```{r}
+library(tidyverse)
+library(nycflights13)
+
+flights
+
+# Quiz 1
+
+filter(flights, carrier == "AS" & carrier == "AA")
+
+dplyr::select(flights, year:day)
+
+
+
+
+# Quiz 2
+
+statics <- read_csv(
+  "data/data/statics.csv", # Husk at sætte denne sti til der hvor data ligger
+  col_types = cols(
+    Evaluation = col_factor(
+      levels = c(
+        "Strongly disagree",
+        "Disagree",
+        "Neither agree nor disagree",
+        "Agree",
+        "Strongly agree"
+      ) )
+  ) )
+
+statics |>
+  # filter(Format == "active") %>%
+  ggplot(aes(x = Evaluation)) +
+  geom_bar()
+
+statics |>
+  ggplot(aes(x = Evaluation, fill = Format)) +
+  geom_bar()
+
+statics |>
+  ggplot(aes(x = Evaluation, fill = Format)) +
+  geom_bar(position = "dodge")
+```
+
+
+Overblik
+Indholdet i dette dokument knytter sig til forelæsningen i Statistiske Metoder torsdag i kursusuge 1.
+
+Formålet er at illustrere
+
+beregning af fordelingsfunktion og fraktilfunktion for en teoretisk fordeling (normalfordelingen)
+beregning af fordelingsfunktion og fraktiler for en numerisk vektor af observationer (den empiriske fordeling)
+Vær opmærksom på at nogle figurer er lavet med standardgrafik i R. I bør lægge mest vægt på koden til de figurer, som er produceret med ggplot2.
+
+Normalfordelingen
+Tæthed
+Standardnormalfordelingen har tæthed \[ f(x)=\frac{1}{\sqrt{2\pi}}e^{\frac{-x^2}{2}} \] mht. lebesguemålet på \(\mathbb{R}\).
+
+Tætheden for normalfordelingen kan beregnes med funktionen dnorm() og funktionen curve() kan benyttes til at optegne tætheden
+```{r}
+curve(dnorm, -4, 4, main = "Tæthed for normalfordelingen ", ylab = "f")
+```
+
+Fordelingsfunktion
+Fordelingsfunktionen for standardnormalfordelingen
+
+\[ \Phi(x) = \int_{-\infty}^x \frac{1}{\sqrt{2\pi}}e^{\frac{-y^2}{2}}dy \] kan ikke udtrykkes med elementære funktioner men den er implementeret i R som funktionen pnorm().
+```{r}
+curve(pnorm, -4, 4, ylab = expression(Phi), xlab = "x", main = "Fordelingsfunktion for normalfordelingen")
+```
+
+Fraktilfunktion
+Fordelingsfunktionen er strengt voksende så fraktilerne (og dermed fraktilfunktionen) er entydigt bestemt som den inverse funktion til fordelingsfunktionen. Denne er implementeret i R som qnorm().
+```{r}
+curve(qnorm, 0, 1, ylab = "Fraktil", xlab = "p", main = "Fraktilfunktion for normalfordelingen")
+```
+
+Vi kan fx. beregne median samt kvartiler ved brug af qnorm()
+
+```{r}
+qnorm(c(0.5, 0.25, 0.75))
+```
+Inter-quartile-range (IQR) bliver således 1.3489795.
+
+Beregning af empiriske fraktiler i R
+Lad os se på hvordan man beregner fraktiler for konkrete data.
+
+Her beder vi R om at trække 25 observationer fra en standard normalfordeling. Vi vender tilbage til, præcis hvad dette skal betyde. Ligenu er det blot en metode til at lave en vektor x med 25 tal.
+
+```{r}
+set.seed(2023)
+x <- rnorm(25)
+```
+
+Empirisk fordelingsfunktion
+R funktionen ecdf() kan benytte til at konstruere et object i R der er den empiriske fordelingsfunktion for observationerne i vektoren x. I praksis kan vi så efterfølgende optegne den empiriske fordelingsfunktion ved brug af curve().
+```{r}
+Fhat <- ecdf(x)
+curve(Fhat, -4, 4, main = "Empirisk fordelingsfunktion for 25 observationer")
+```
+Hvis man er meget pedantisk, så er den empiriske fordelingsfunktion ikke optegnet helt korrekt som en trappefunktion.
+
+Vi kan i stedet lave et datasæt, som indeholder de ordnede observationer og den tilhørende værdi af den empiriske fordelingsfunktion.
+
+```{r}
+Fhat_data <- tibble(z = sort(x), p = seq(1, 25)/25)
+Fhat_data
+```
+
+Vi kan da optegne den empiriske fordelingsfunktion som en trappefunktion med plot(... , type = "S").
+```{r}
+plot(Fhat_data$z, Fhat_data$p, type = "S", ylab = "Fhat"
+     , xlab = "x", main = "Empirisk fordelingsfunktion for 25 observationer")
+```
+
+Som beskrevet i noterne NRHAT s. 14 kan man benytte stat_cdf() funktionen fra ggplot2 til at optegne den empiriske fordelingsfunktion, uden det mellemliggende trin, hvor vi konstruerer en funktion i R som evalueres i konkrete gitterpunkter før visualisering. Koden ses nedenfor
+```{r}
+data.frame(x) %>%
+  ggplot(aes(x)) + stat_ecdf(geom = "step") + labs(y = "Fhat", title = "Empirisk fordelingsfunktion for 25 observationer")
+```
+
+Empiriske fraktiler
+Funktionen quantile() kan benyttes til at beregne empiriske fraktiler for en numerisk variabel i et datasæt.
+
+Bemærk: Der er implementeret 9 forskellige metoder/algoritmer til beregning af empiriske fraktiler for en numerisk vektor. quantile(..., type = 1) svarer til den generaliserede inverse der benyttes som den foretrukne fraktilfunktion i NRHAT Definition 1.2.5. Vær dog opmærksom på, at
+
+default algortimen (svarende til type = 7) ikke giver den generaliserede inverse, men i stedet benytter en passende form for approksimation til den empiriske fordelingsfunktion.
+algoritmerne svarende til type 1, 2 eller 3 tilsyneladende er de eneste, som giver en fraktilfunktion, der opfylder NRHAT Definition 1.2.4.
+for ethvert praktisk formål har det næppe den store betydning, hvilken type fraktiler der benytte, men det vil være god stil selv at have styr på det.
+For vores datasæt med 25 observationer er medianen den midterste observation for de fleste værdier af argumentet type
+```{r}
+quantile(x, prob = 0.5) # median - default
+```
+
+```{r}
+quantile(x, prob = 0.5, type = 1) # median
+```
+
+```{r}
+quantile(x, prob = 0.5, type = 2) # median
+```
+
+```{r}
+quantile(x, prob = 0.5, type = 3) # median
+```
+
+```{r}
+quantile(x, prob = 0.5, type = 4) # median
+```
+```{r}
+quantile(x, prob = 0.5, type = 5) # median
+```
+```{r}
+quantile(x, prob = 0.5, type = 6) # median
+```
+
+```{r}
+quantile(x, prob = 0.5, type = 7) # median
+```
+```{r}
+quantile(x, prob = 0.5, type = 8) # median
+```
+```{r}
+quantile(x, prob = 0.5, type = 9) # median
+```
+```{r}
+quantile(x, prob = 0.25) # median - default
+```
+og så ned til 9 igen
+
+Sammenligning af data med en teoretisk fordeling
+Ønsker vi at sammenligne den empiriske fordeling for den observerede vektor x med en normalfordeling, så kan vi gøre flere ting
+
+PP-plot: vi kan optegne og sammenligne den empiriske fordelingsfunktion med fordelingsfunktionen for normalfordelingen
+QQ-plot: vi kan udregne og plotte empiriske fraktiler og teoretiske fraktiler imod hinanden
+Vi viser her, hvordan man kan lave begge figurer med ggplot2. Vær opmærksom på, at ggplot2 er designet til at visualisere datasæt og ikke funktioner. Derfor starter vi med at lave et datasæt, som indeholder de variable, som skal visualiseres på figuren.
+
+Sammenligning af fordelingsfunktioner
+
+Her udregnes den empiriske fordelingsfunktion og fordelingsfunktionen for normalfordelingen i gitterpunkter som ligger ækvidistant på intervallet fra -2 til 2.
+```{r}
+gauss_data <- tibble(z = seq(-2, 2, 0.01), Fhat = Fhat(z), Fnorm = pnorm(z))
+gauss_data
+
+```
+```{r}
+ggplot(gauss_data, aes(x = z, y = Fhat)) + geom_step() + geom_line(aes(y = Fnorm))
+```
+Husk på at vi har trukket/simuleret de 25 observationer fra en standardnormalfordeling, så vi vil også regne med, at den empiriske fordelingsfunktion ligner fordelingsfunktionen for normalfordelingen. Men for rigtige data kan være svært at vurdere, om afvigelserne er for store til, at det kan forklares som tilfældig variation. Det er ofte lettere at sammenligne to fordelinger ved at lave et QQ-plot.
+
+QQ-plot
+
+Her beregnes empiriske og teoretiske fraktiler for standardnormalfordelingen for alle værdier fra 0.04 til 0.96. Når man plotter fraktiler fra to forskellige fordelinger imod hinanden fås et QQ-plot. Hvis fordelingerne er helt ens, så bør punkter ligge omkring en ret linje med hældning 1 og skæring 0.
+```{r}
+quant_data <- tibble(p = seq(0.04, 0.96, 0.04), q_data = quantile(x, prob = p), q_norm = qnorm(p))
+quant_data
+```
+```{r}
+ggplot(quant_data, aes(x = q_data, y = q_norm)) + geom_point() + labs(x = "Quantiles of empirical distribution", y = "Quantiles of normal distribution") + geom_abline(slope = 1, intercept = 0, linetype = 2)
+```
+Det kræver erfaring at aflæse et QQ-plot korrekt. Man bør se efter systematiske afvigelser fra den rette linje.
+
+Hvis punkterne på et QQ-plot ligger omkring en anden ret linje end linje med hældning 1 gennem (0,0), så tyder det på at de to fordelinger som sammenlignes kan fås ved en location-scale-transformation (se NRHAT opgave 1.3).
+
+Uge 2.1
+```{r}
+library(moderndive)
+library(tidyverse)
+
+######## frequency (mean) #########
+N = 200 # antal gentagelser
+m = rep(0,N) # initialiser gennemsnitsvektor
+for (i in 1:N){
+rs = rep_sample_n(bowl, 20, reps = 10)
+m[i] = mean(rs[,'color'] == "red") # beregn gennemsnit for stikprøve
+}
+# plot histogram
+ggplot(data = data.frame(m=m), aes(x = m, y = after_stat(density))) +
+geom_histogram(binwidth = 0.04, boundary = 0.4, color = "white") +
+ylim(0, 12) + xlim(0, 1) + geom_vline(xintercept = 0.375, color = "blue")
+
+# gentag men denne gang med større stikprøve, uden gentagelser
+rep_sample_n(bowl, 200, reps = 200) %>%
+  summarize(mean = mean(color == "red")) %>%
+  ggplot(aes(x = mean, y = after_stat(density))) +
+  geom_histogram(binwidth = 0.04, boundary = 0.4, color = "white") +
+  ylim(0, 12) + xlim(0, 1) +
+  geom_vline(xintercept = 0.375, color = "blue")
+
+# gentag men denne gang med mindre stikprøve, uden gentagelser
+rep_sample_n(bowl, 20, reps = 10) %>%
+  summarize(mean = mean(color == "red")) %>%
+  ggplot(aes(x = mean, y = after_stat(density))) +
+  geom_histogram(binwidth = 0.04, boundary = 0.4, color = "white") +
+  ylim(0, 12) + xlim(0, 1) +
+  geom_vline(xintercept = 0.375, color = "blue")
+
+
+######## mean (continuous variable) #########
+# chocolate covered almonds dataset
+almonds_bowl
+
+# summary statistics of data
+almonds_bowl |> 
+  summarize(mean_weight = mean(weight), 
+            sd_weight = sd(weight), 
+            length = n())
+
+# histogram (full census)
+ggplot(almonds_bowl, aes(x = weight)) +
+  geom_histogram(binwidth = 0.1, color = "white")
+
+# en stikrpøve
+almonds_sample
+ggplot(almonds_sample, aes(x = weight)) +
+  geom_histogram(binwidth = 0.1, color = "white")
+
+# stikprøver vi selv udtager med rep_slice_sample
+virtual_samples_almonds <- almonds_bowl |> 
+  rep_slice_sample(n = 25, reps = 1000)
+virtual_samples_almonds
+
+# opsummer stikrpøvefunktioenr (statistics)
+virtual_mean_weight <- virtual_samples_almonds |> 
+  summarize(mean_weight = mean(weight))
+virtual_mean_weight
+
+# histogram
+ggplot(virtual_mean_weight, aes(x = mean_weight)) +
+  geom_histogram(binwidth = 0.04, boundary = 3.5, color = "white") +
+  labs(x = "Sample mean", title = "Histogram of 1000 sample means") 
+
+# opsummer parametre for census
+almonds_sample |>
+  summarize(sample_mean_weight = mean(weight))
+
+# Segment 1: sample size = 25 ------------------------------
+# 1.a) Calculating the 1000 sample means, each from random samples of size 25
+virtual_mean_weight_25 <- almonds_bowl |> 
+  rep_slice_sample(n = 25, reps = 1000)|>
+  summarize(mean_weight = mean(weight), n = n())
+
+# 1.b) Plot distribution via a histogram
+ggplot(virtual_mean_weight_25, aes(x = mean_weight)) +
+  geom_histogram(binwidth = 0.02, boundary = 3.6, color = "white") +
+  labs(x = "Sample mean weights for random samples of 25 almonds", title = "25") 
+
+# Segment 2: sample size = 50 ------------------------------
+# 2.a) Calculating the 1000 sample means, each from random samples of size 50
+virtual_mean_weight_50 <- almonds_bowl |> 
+  rep_slice_sample(n = 50, reps = 1000)|>
+  summarize(mean_weight = mean(weight), n = n())
+
+# 2.b) Plot distribution via a histogram
+ggplot(virtual_mean_weight_50, aes(x = mean_weight)) +
+  geom_histogram(binwidth = 0.02, boundary = 3.6, color = "white") +
+  labs(x = "Sample mean weights for random samples of 50 almonds", title = "50") 
+
+# Segment 3: sample size = 100 ------------------------------
+# 3.a) Calculating the 1000 sample means, each from random samples of size 100
+virtual_mean_weight_100 <- almonds_bowl |> 
+  rep_slice_sample(n = 100, reps = 1000)|>
+  summarize(mean_weight = mean(weight), n = n())
+
+# 3.b) Plot distribution via a histogram
+ggplot(virtual_mean_weight_100, aes(x = mean_weight)) +
+  geom_histogram(binwidth = 0.02, boundary = 3.6, color = "white") +
+  labs(x = "Sample mean weights for random samples of 100 almonds", title = "100") 
+
+# census parametre
+almonds_bowl |>
+  summarize(mu = mean(weight), sigma = sd(weight))
+
+# n = 25 (stikprøve parametre)
+virtual_mean_weight_25 |> 
+  summarize(E_Xbar_25 = mean(mean_weight), sd = sd(mean_weight))
+
+# n = 50 (stikprøve parametre)
+virtual_mean_weight_50 |> 
+  summarize(E_Xbar_50 = mean(mean_weight), sd = sd(mean_weight))
+
+# n = 100 (stikprøve parametre)
+virtual_mean_weight_100 |> 
+  summarize(E_Xbar_100 = mean(mean_weight), sd = sd(mean_weight))
+
+
+```
+
+Uge 2.2
+```{r}
+library(tidyverse)
+library(moderndive)
+library(infer)
+
+# stikprøve på 101 chokolade overtrukne mandler...
+almonds_sample_101 <- almonds_bowl |> 
+  rep_slice_sample(n = 101)
+
+almonds_sample_101 <- almonds_sample_101 |> 
+  ungroup() |> 
+  select(-replicate)
+almonds_sample_101
+
+# populations parametre:
+almonds_bowl |> 
+  summarize(population_mean = mean(weight), 
+            population_sd = pop_sd(weight))
+
+# stikprøve gennemsnit og fordelingens s.d., samt øvre og nedre grænse for middelværdi:
+CIs <- almonds_sample_101 |>
+  summarize(
+    sample_mean = mean(weight),
+    sd_weight = sd(weight), 
+    sample_size = n(),
+    lower_bound_N = mean(weight) - 1.96 * sd(weight) / sqrt(length(weight)),
+    upper_bound_N = mean(weight) + 1.96 * sd(weight) / sqrt(length(weight)),
+    lower_bound_t = mean(weight) - 1.98*sd(weight)/sqrt(length(weight)),
+    upper_bound_t = mean(weight) + 1.98*sd(weight)/sqrt(length(weight))
+  )
+CIs <- as.data.frame(CIs)
+# Hvor kommer de 1.96 og 1.98 fra?
+
+# gentag 35 gange:
+bootstrap_samples_35 <- almonds_sample_101 |> 
+  rep_sample_n(size = 100, replace = TRUE, reps = 35)
+bootstrap_samples_35
+boot_means <- bootstrap_samples_35 |> 
+  summarize(mean_weight = mean(weight))
+boot_means
+
+
+# Tag nu 1000 bootstrap samples
+boot_means <- almonds_sample_101 |> 
+  rep_sample_n(size = 100, replace = TRUE, reps = 1000) |> 
+  summarize(mean_weight = mean(weight))
+boot_means
+
+# Beregn 95% percentiler og sammenlign med dem fra antagelser om normal eller t fordeling
+percentile_ci <- boot_means %>% 
+  get_confidence_interval(level = 0.95, type = "percentile", point_estimate = boot_means)
+percentile_ci
+CIs
+
+# plot bootstrap means i histogram sammen med KI som percentiler i bootstrap fordelingen:
+ggplot(boot_means, aes(x = mean_weight)) +
+  geom_histogram(binwidth = 0.01, color = "white") +
+  labs(x = "sample mean weight in grams") +
+  shade_confidence_interval(endpoints = percentile_ci) 
+
+# gennemsnit og s.d.:
+boot_means |> 
+  summarize(mean_of_means = mean(mean_weight),
+            sd_of_means = sd(mean_weight))
+
+```
+Uge 3:
+```{r}
+library(infer)
+library(tidyverse)
+library(nycflights13)
+```
+Plot forsinkelserne
+Histogram af forsinkelserne. Vi er interesseret i den gennemsnitlige forsinkelse. Læg mærke til at det ikke kan antages at forsinkelserne er normalfordelte, og fordi vi anvender ikke-parametrisk bootstrapping, behøver vi ikke tænke videre over hvilken fordeling forsinkelserne faktisk følger.
+
+```{r}
+ggplot(data=flights,  mapping = aes(x = dep_delay, y = after_stat(density))) +
+  geom_histogram(bins = 40, color = "white", fill = "steelblue") +
+  xlab("Departure delay (minutes)")
+```
+
+Brug ‘infer’ R pakken
+specify: Datasæt vi er interesseret i samt variable og evt. model. Vi er interesset i forsinkelser (dep_delays) i flyafgange i datasættet flights.
+
+generate: Bootstrapping med B = 1000
+
+calculate: Beregn stikprøvefunktionen (her middelværdien). Vi beregner B af dem.
+```{r}
+set.seed(1)
+DepDelayBs <- flights %>% 
+  specify(response = dep_delay) %>% 
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+# gem de estimerede middelværdier i m
+m <- DepDelayBs$stat
+
+# visualizer bootstrap fordelingen
+ visualize(DepDelayBs)
+```
+
+Konfidens intervaller
+Lad os nu beregne konfindesintervallerne kaldet ‘percentiles’, ‘simple’ og ‘SE’ (standard error):
+```{r}
+# Percentil KI
+percentile_ci <- DepDelayBs %>% 
+  get_confidence_interval(level = 0.95, type = "percentile", point_estimate = m)
+percentile_ci
+```
+```{r}
+# SE KI
+standard_error_ci <- DepDelayBs %>% 
+  get_confidence_interval(level = 0.95, type = "se", point_estimate = m)
+standard_error_ci
+```
+```{r}
+# Simpel KI
+lower_CI_simple = 2*mean(m) - percentile_ci$upper_ci
+upper_CI_simple = 2*mean(m) - percentile_ci$lower_ci
+print(c(lower_CI_simple, upper_CI_simple))
+```
+```{r}
+# Plot bootstrap estimaterne
+visualize(DepDelayBs) +
+shade_confidence_interval(endpoints = percentile_ci)
+```
+```{r}
+# Iøvrigt er det bootstrap estimerede mean:
+print(mean(m))
+```
+
+
+Brug ‘infer’ R pakken - nu med stikprøve funktionen median()
+specify: Datasæt vi er interesseret i samt variable og evt. model. Vi er interesset i forsinkelser (dep_delays) i flyafgange i datasættet flights.
+
+generate: Bootstrapping med B = 1000
+
+calculate: Beregn stikprøvefunktionen (her medianen af værdierne). Vi beregner B summer af størrelse n > 300,000.
+```{r}
+set.seed(1)
+DepDelayBs <- flights %>% 
+  specify(response = dep_delay) %>% 
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "median")
+```
+```{r}
+# gem median estimaterne i m
+m <- DepDelayBs$stat
+
+# visualizer bootstrap fordelingen
+ visualize(DepDelayBs)
+```
+
+Konfidens intervaller
+Lad os nu beregne konfindesintervallerne kaldet ‘percentiles’, ‘simple’ og ‘SE’ (standard error):
+```{r}
+# Percentil KI
+percentile_ci <- DepDelayBs %>% 
+  get_confidence_interval(level = 0.95, type = "percentile", point_estimate = m)
+percentile_ci
+```
+```{r}
+# SE KI
+standard_error_ci <- DepDelayBs %>% 
+  get_confidence_interval(level = 0.95, type = "se", point_estimate = m)
+standard_error_ci
+```
+```{r}
+# Simpel KI
+lower_CI_simple = 2*mean(m) - percentile_ci$upper_ci
+upper_CI_simple = 2*mean(m) - percentile_ci$lower_ci
+print(c(lower_CI_simple, upper_CI_simple))
+```
+```{r}
+# Plot bootstrap estimatet for percentil KI
+visualize(DepDelayBs) +
+shade_confidence_interval(endpoints = percentile_ci)
+```
+```{r}
+# Iøvrigt er den bootstrap estimerede median:
+print(mean(m))
+```
+
+Uge 4
+Overblik
+Indholdet i dette dokument knytter sig til forelæsningen i Statistiske Metoder tirsdag i kursusuge 4.
+
+Formålet er at illustrere
+
+hypotesetest baseret på bootstrap (sampling fra empirisk fordeling)
+hypotesetest baseret på permutationssampling
+ModernDive Chapter 1: promotions
+Stikprøvefunktion og punktestimat
+Vi interesserer os for den stikprøvefunktion, der beregner difference in sample proportions for andelen af CV’er med mande- og kvindenavne der forfremmes.
+
+```{r}
+model <- promotions %>%
+  specify(decision ~ gender, success = "promoted")
+
+Delta <- model %>%
+  calculate(stat = "diff in props", order = c("male", "female"))
+Delta
+```
+Punktestimatet for forskellen er ca. 0.292.
+
+Bootstrapfordeling og konfidensinterval
+Dernæst bestemmes bootstrapfordelingen af forskellen, og 0.95 konfidensintervaller (her: percentilintervaller) udtrækkes fra boostrapfordelingen.
+```{r}
+set.seed(2022)
+B <- 1000
+
+boot <- model %>%
+  generate(reps = B, type = "bootstrap") %>%
+  calculate(stat = "diff in props", order = c("male", "female"))
+
+boot %>%
+  visualize()
+```
+```{r}
+boot %>%
+  get_ci()
+```
+
+Baseret på konfidensintervallet virker det ikke rimelig at tro, at der ingen forskel er i difference in sample proportions.
+
+Hypotesetest
+Vi ønsker at teste hypotesen om, at andelen der forfremmes er ens for CV’en med mande- og kvindenavne.
+
+På forelæsningsslides 26-31 fra forelæsningen torsdag i kursusuge 3 er vist, hvordan man kan udføre testet ved at bootstrappe fordelingen af to forskellige teststørrelser (difference in sample proportions og T-teststørrelsen).
+
+Advarsel: Nedenstående viser, at man ikke blot kan benytte det sædvanelige workflow med infer-pakken til at bootstrappe fordelingen af teststørrelsen.
+```{r}
+model <- model %>%
+  hypothesize(null = "independence")
+
+# Følgende bootstrapper IKKE under H0.
+
+boot_test <- model %>%
+  generate(reps = B, type = "bootstrap") %>%
+  calculate(stat = "diff in props", order = c("male", "female"))
+```
+
+A warning is given and the histogram (below) of the bootstrapped differences shows that the bootstrap still bootstraps from the two groups independently.
+```{r}
+boot_test %>%
+  visualize()
+```
+Bemærk: Hvis fordelingen ovenfor rent faktisk var bestemt ved at bootstrappe teststørrelsens fordelingen under nulhypotesen, så ville man forvente, at fordelingen lå omkring 0.
+
+Hvis vi ønkser at benytte infer-pakken til hypotesetest, så benyttes i stedet permutationssampling af teststørrelsen som vist her
+```{r}
+perm <- model %>%
+  generate(reps = B, type = "permute") %>% # Type changed to permute
+  calculate(stat = "diff in props", order = c("male", "female"))
+
+perm %>%
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta$stat, direction = "both")
+```
+```{r}
+perm %>%
+  get_p_value(obs_stat = Delta$stat, direction = "both")
+```
+Der er en vis evidens imod nulhypotesen. Testet forkastes på niveau 0.05 men fx. ikke på niveau 0.01.
+
+
+NRHAT: Eksempel 2.2.7 Teacher evaluations
+Indlæs data (husk at ændre stien på din egen computer)
+```{r}
+statics <- read_csv(
+  "data/data/statics.csv",   # Vælg korrekt sti lokalt
+  col_types = cols(
+    Evaluation = col_factor(
+      levels = c(
+        "Strongly disagree",
+        "Disagree",
+        "Neither agree nor disagree",
+        "Agree",
+        "Strongly agree"
+      )
+    )
+  )
+)
+```
+
+Beregning af teststørrelse
+```{r}
+model_statics <- statics %>%
+  specify(Score ~ Format)
+
+Delta_mean <- model_statics  %>%
+  calculate(stat = "diff in means", order = c("active", "passive"))
+Delta_mean
+```
+
+Bootstrapfordeling og konfidensintervaller
+```{r}
+boot <- model_statics  %>%
+  generate(reps = B, type = "bootstrap") %>%
+  calculate(stat = "diff in means", order = c("active", "passive"))
+
+boot %>%
+  visualize()
+```
+Percentilintervaller
+```{r}
+boot %>%
+  get_ci()  # Percentilintervalle
+```
+Standarderrorintervaller
+```{r}
+boot %>%
+  get_ci(type = "se", point_estimate = Delta_mean)
+```
+Test af nulhypotese
+Permutationssampling
+```{r}
+model_statics <- model_statics %>%
+  hypothesize(null = "independence")
+
+perm <- model_statics %>%
+  generate(reps = B, type = "permute") %>% # Type changed to permute
+  calculate(stat = "diff in means", order = c("active", "passive"))
+
+perm %>%
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta_mean$stat, direction = "both")
+```
+Beregning af p-værdi
+```{r}
+perm %>%
+  get_p_value(obs_stat = Delta_mean$stat, direction = "both")
+
+```
+NRHAT: Eksempel 2.2.8 Balloner
+Indlæs data
+```{r}
+balloon <- read_table(
+  "data/data/balloon.txt", # Vælg korrekt sti lokalt
+  col_types = cols(
+    Farve = col_factor(levels = c("blaa", "rod", "orange", "gul")),
+    X4 = col_skip()
+  )
+)
+```
+Test af hypotese
+Vi benytter F-teststørrelse og permutationssampling til at teste hypotesen om, at oppustningstiden for balloner er den samme uanset ballonens farve.
+
+Beregning af F-teststørrelse
+```{r}
+model_balloons <- balloon %>%
+  specify(Tid ~ Farve) %>%
+  hypothesize(null = "independence")
+
+F_test <- model_balloons %>%
+  calculate(stat = "F")
+F_test
+```
+Permutationsfordeling
+```{r}
+perm <- model_balloons %>%
+  generate(reps = B, type = "permute") %>%
+  calculate(stat = "F")
+
+perm %>%
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = F_test$stat, direction = "right")
+```
+Beregning af p-værdi
+```{r}
+perm %>%
+  get_p_value(obs_stat = F_test$stat, direction = "right")
+```
+

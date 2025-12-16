@@ -1,0 +1,26 @@
+---
+title: "Uge 4"
+author: "Christian Præst Møller"
+date: "2025-12-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Opgave 2.10
+```{r}
+library(readr)
+neuron <- read_csv("data/data/neuron.txt", 
+    col_names = FALSE)
+
+library(tidyverse)
+
+cvme <- neuron |>
+  ?
+hypothesise()
+
+
+```
+
