@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(infer)
 library(tidyverse)
+library(ggplot2)
 
 set.seed(43)
 n <- 32
@@ -25,8 +26,16 @@ quantile(y, prob = 0.95)
 
 v <- tibble(y)
 
-test <- rep_sample_n(v,size = n,replace = TRUE, reps = 10) |>
-  summarize(mean(y),quantile(disp,0.95))
+test <- rep_sample_n(v,size = n,replace = TRUE, reps = 1000) |>
+  summarize(gns = mean(y),e = (1/n)*sum(y <= 0.25),q = quantile(y,0.95))
+
+ggplot(data=test,  mapping = aes(x = gns)) +
+geom_histogram()
+ggplot(data=test,  mapping = aes(x = e)) +
+geom_histogram()
+ggplot(data=test,  mapping = aes(x = q)) +
+geom_histogram()
+
  
 
 test
