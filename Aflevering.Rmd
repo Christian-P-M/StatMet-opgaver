@@ -1,0 +1,19 @@
+---
+title: "Afleveringsopgave"
+author: "Christian Præst Møller"
+date: "2025-12-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+set.seed(43)
+n <- 32
+x <- runif(32, min = 0, max = 1)
+y <- (1/5)*exp(x)
+View(x,y)
+```
+
