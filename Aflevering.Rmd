@@ -14,12 +14,13 @@ library(infer)
 library(tidyverse)
 library(ggplot2)
 
-set.seed(43)
+set.seed(1)
 n <- 32
 x <- runif(32, min = 0, max = 1)
 y <- (1/5)*exp(x)
 x
 y
+
 mean(y)
 (1/n)*sum(y <= 0.25)
 quantile(y, prob = 0.95)
@@ -27,17 +28,208 @@ quantile(y, prob = 0.95)
 v <- tibble(y)
 
 test <- rep_sample_n(v,size = n,replace = TRUE, reps = 1000) |>
-  summarize(gns = mean(y),e = (1/n)*sum(y <= 0.25),q = quantile(y,0.95))
+  summarize(gns = mean(y),e = (1/n)*sum(y <= 0.25),q = quantile(y,0.95))  
+
 
 ggplot(data=test,  mapping = aes(x = gns)) +
-geom_histogram()
+geom_histogram(bins = 15)
 ggplot(data=test,  mapping = aes(x = e)) +
-geom_histogram()
+geom_histogram(bins = 15)
 ggplot(data=test,  mapping = aes(x = q)) +
-geom_histogram()
-
- 
+geom_histogram(bins = 15)
 
 test
+ 
+abe <- v |>
+  generate(reps = 1000, type = "bootstrap") |>
+  calculate(y,stat = "mean")
+
+test
+abe 
+ 
+abe |> 
+  get_ci(gns, level = 0.95, type = NULL, point_estimate = NULL)
+
+
+
+
+KI <- test |> 
+  get_confidence_interval(level = 0.95, type = "percentile", point_estimate = m)
+
 ```
 Instikt siger quantile giver noget forkert men skal lige kigge på definitionen
+
+
+```{r}
+library(infer)
+library(tidyverse)
+library(ggplot2)
+
+set.seed(1)
+n <- 32
+x <- runif(32, min = 0, max = 1)
+y <- (1/5)*exp(x)
+x
+y
+
+e1 <- mean(y)
+e2 <- (1/n)*sum(y <= 0.25)
+e3 <-quantile(y, prob = 0.95)
+
+v <- tibble(y)
+
+test <- rep_sample_n(v,size = n,replace = TRUE, reps = 1000) 
+test1 <-  test |>
+  summarize(gns = mean(y))
+test2 <- test |>
+  summarize(e = (1/n)*sum(y <= 0.25))
+test3 <- test |>
+  summarize(q = quantile(y,0.95))
+KI1 <- test1 |>
+ get_confidence_interval(level = 0.95, type = "percentile", point_estimate = e1)   
+KI2 <- test2 |>
+ get_confidence_interval(level = 0.95, type = "percentile", point_estimate = e2)  
+KI3 <- test3 |>
+ get_confidence_interval(level = 0.95, type = "percentile", point_estimate = e3)  
+
+ggplot(data=test1,  mapping = aes(x = gns)) +
+geom_histogram(bins = 15) +
+  labs(x = "Sample Mean") +
+  labs(y = "Antal") +
+  shade_confidence_interval(endpoints = KI1)
+
+ggplot(data=test2,  mapping = aes(x = e)) +
+geom_histogram(bins = 15) +
+  labs(x = "Empirisk mål") +
+  labs(y = "Antal") +
+  shade_confidence_interval(endpoints = KI2)
+
+
+ggplot(data=test3,  mapping = aes(x = q)) +
+geom_histogram(bins = 15) +
+  labs(x = "95% Fractil") +
+  labs(y = "Antal") +
+  shade_confidence_interval(endpoints = KI3)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'
+
+del 2
+```{r}
+library(readr)
+data1 <- read_csv("data/data/remote_sensing_sentinel2_2018.csv")
+
+tabel <- data1 |>
+  group_by(season) |>
+  summarize(mean(NDVI),sd(NDVI))
+
+tabel
+
+
+gnstt <- data1 |>
+  specify(NDVI ~ season) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "F") 
+
+gnstt|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = F_test$stat, direction = "right") 
+gnstt|>
+  get_p_value(obs_stat = F_test$stat, direction = "right")
+
+gnsfe <- data1 |>
+  filter(season == "Fall" | season == "Spring") |>
+  specify(NDVI ~ season) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 100000, type = "permute") |>
+  calculate(stat = "diff in means", order = c("Fall", "Spring")) 
+
+gnsfe|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta_mean$stat, direction = "both") 
+gnsfe|>
+  get_p_value(obs_stat = Delta_mean$stat, direction = "both")
+
+
+
+
+gnses <- data1 |>
+  filter(season == "Fall" | season == "Summer") |>
+  specify(NDVI ~ season) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means", order = c("Fall", "Summer")) 
+
+gnses|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta_mean$stat, direction = "both") 
+gnses|>
+  get_p_value(obs_stat = Delta_mean$stat, direction = "both")
+
+
+
+
+gnssf <- data1 |>
+  filter(season == "Summer" | season == "Spring") |>
+  specify(NDVI ~ season) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means", order = c("Summer", "Spring")) 
+
+gnssf|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta_mean$stat, direction = "both") 
+gnssf|>
+  get_p_value(obs_stat = Delta_mean$stat, direction = "both")
+
+
+
+
+
+
+
+
+
+ggplot(data=data1,  mapping = aes(x = factor(climate_zone), y = NDVI, fill= season)) +
+  geom_boxplot()
+
+ggplot(data=data1,  mapping = aes(x = factor(season), y = NDVI, fill= climate_zone)) +
+  geom_boxplot(position = "dodge")
+```
+Spørgsmål 7:
+```{r}
+library(readr)
+data1 <- read_csv("data/data/remote_sensing_sentinel2_2018.csv")
+
+
+relevant <- data1 |>
+  mutate(kryds = str_glue("{season}{climate_zone}"))|>
+  select(kryds,NDVI)|>
+  group_by(kryds)|>
+  summarize(mean(NDVI))
+
+
+relevant
+
+
+
+lifeExp_model2 <- lm(lifeExp ~ continent - 1
+                    , data = gapminder2007)
+get_regression_table(lifeExp_model2)
+```
+
