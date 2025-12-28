@@ -132,10 +132,16 @@ del 2
 ```{r}
 library(readr)
 data1 <- read_csv("data/data/remote_sensing_sentinel2_2018.csv")
+library(infer)
+library(tidyverse)
+library(ggplot2)
+
+set.seed(1)
+
 
 tabel <- data1 |>
   group_by(season) |>
-  summarize(mean(NDVI),sd(NDVI))
+  summarize(n(),mean(NDVI))
 
 tabel
 
@@ -143,7 +149,7 @@ tabel
 gnstt <- data1 |>
   specify(NDVI ~ season) |>
   hypothesise(null = "independence") |>
-  generate(reps = 1000, type = "permute") |>
+  generate(reps = 10000, type = "permute") |>
   calculate(stat = "F") 
 
 gnstt|>
@@ -156,7 +162,7 @@ gnsfe <- data1 |>
   filter(season == "Fall" | season == "Spring") |>
   specify(NDVI ~ season) |>
   hypothesise(null = "independence") |>
-  generate(reps = 100000, type = "permute") |>
+  generate(reps = 10000, type = "permute") |>
   calculate(stat = "diff in means", order = c("Fall", "Spring")) 
 
 gnsfe|>
@@ -172,7 +178,7 @@ gnses <- data1 |>
   filter(season == "Fall" | season == "Summer") |>
   specify(NDVI ~ season) |>
   hypothesise(null = "independence") |>
-  generate(reps = 1000, type = "permute") |>
+  generate(reps = 10000, type = "permute") |>
   calculate(stat = "diff in means", order = c("Fall", "Summer")) 
 
 gnses|>
@@ -188,7 +194,7 @@ gnssf <- data1 |>
   filter(season == "Summer" | season == "Spring") |>
   specify(NDVI ~ season) |>
   hypothesise(null = "independence") |>
-  generate(reps = 1000, type = "permute") |>
+  generate(reps = 10000, type = "permute") |>
   calculate(stat = "diff in means", order = c("Summer", "Spring")) 
 
 gnssf|>
@@ -214,22 +220,22 @@ ggplot(data=data1,  mapping = aes(x = factor(season), y = NDVI, fill= climate_zo
 Spørgsmål 7:
 ```{r}
 library(readr)
+library(moderndive)
+
 data1 <- read_csv("data/data/remote_sensing_sentinel2_2018.csv")
 
 
 relevant <- data1 |>
   mutate(kryds = str_glue("{season}{climate_zone}"))|>
-  select(kryds,NDVI)|>
-  group_by(kryds)|>
-  summarize(mean(NDVI))
+  select(kryds,NDVI)
 
 
 relevant
 
 
 
-lifeExp_model2 <- lm(lifeExp ~ continent - 1
-                    , data = gapminder2007)
+lifeExp_model2 <- lm(NDVI ~  - 1
+                    , data = relevant)
 get_regression_table(lifeExp_model2)
 ```
 
