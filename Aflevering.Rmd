@@ -250,7 +250,11 @@ Spørgsmål 7:
 ```{r}
 library(readr)
 library(moderndive)
+library(infer)
+library(tidyverse)
+library(ggplot2)
 
+set.seed(38)
 data1 <- read_csv("data/data/remote_sensing_sentinel2_2018.csv")
 
 
@@ -308,7 +312,7 @@ F_test <- function(lm_null, lm_full) {
 }
 
 
-
+#1 prev month air temperaturev
 statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_air_temperature, data = data1)
 statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
 F_obs <- F_test(statics_lm, statics_lm_stor)
@@ -326,10 +330,187 @@ ggplot(data=statics_boot) +
 
 
 statics_boot %>%
-  get_p_value(obs_stat = F_obs, direction = "both")
+  get_p_value(obs_stat = F_obs, direction = "right")
+
+#2 prev_month_soil_temperature
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_soil_temperature, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+#3 prev_month_moisture
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_moisture, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+#4 soil_temperature_yearly
+statics_lm_stor <- lm(NDVI~ climate_zone+season+soil_temperature_yearly, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+#5 moisture_yearly
+statics_lm_stor <- lm(NDVI~ climate_zone+season+moisture_yearly, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+#6 air_temperature_yearly
+statics_lm_stor <- lm(NDVI~ climate_zone+season+air_temperature_yearly, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
 
 
 
+
+#7 Mit første og sidste bud på model
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_air_temperature+prev_month_soil_temperature+prev_month_moisture, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+
+#PERMUTATIONER FOR LOLS SKYlD
+#8 -airtemp
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_soil_temperature+prev_month_moisture, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+
+#9 -soiltemp
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_air_temperature+prev_month_moisture, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
+
+#10 -moist
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_air_temperature+prev_month_soil_temperature, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "right")
 
 
 ```
