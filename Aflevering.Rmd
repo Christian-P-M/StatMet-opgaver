@@ -146,6 +146,24 @@ tabel <- data1 |>
 tabel
 
 
+
+AAAH<- data1|>
+  filter(season == "Summer")
+AAAH
+
+gnsFt <- AAAH |> 
+  specify(NDVI ~ climate_zone) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "F") 
+
+gnsFt|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = F_test$stat, direction = "right") 
+gnsFt|>
+  get_p_value(obs_stat = F_test$stat, direction = "right")
+
+
 gnstt <- data1 |>
   specify(NDVI ~ season) |>
   hypothesise(null = "independence") |>
@@ -205,7 +223,18 @@ gnssf|>
 
 
 
+gnsGGG <- data1 |>
+  filter(climate_zone == "cfa" | season == "bsk") |>
+  specify(NDVI ~ climate_zone) |>
+  hypothesise(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "diff in means", order = c("cfa", "bsk")) 
 
+gnsGGG|>
+  visualize(bins = 10) +
+  shade_p_value(obs_stat = Delta_mean$stat, direction = "both") 
+gnsGGG|>
+  get_p_value(obs_stat = Delta_mean$stat, direction = "both")
 
 
 
@@ -234,8 +263,74 @@ relevant
 
 
 
-lifeExp_model2 <- lm(NDVI ~  - 1
-                    , data = relevant)
+lifeExp_model2 <- lm(NDVI ~ climate_zone+season
+                    , data = data1)
 get_regression_table(lifeExp_model2)
+
+
+
+
+base <- lm(NDVI ~ climate_zone+season, data = data1)
+get_regression_table(base)
+gæt1 <- lm(NDVI ~ climate_zone+season+prev_month_air_temperature, data = data1)
+get_regression_table(gæt1)
+get_regression_summaries(gæt1)
+gæt2 <- lm(NDVI ~ climate_zone+season+prev_month_soil_temperature, data = data1)
+get_regression_table(gæt2)
+get_regression_summaries(gæt2)
+gæt3 <- lm(NDVI ~ climate_zone+season+prev_month_moisture, data = data1)
+get_regression_table(gæt3)
+get_regression_summaries(gæt3)
+gæt4 <- lm(NDVI ~ climate_zone+season+soil_temperature_yearly, data = data1)
+get_regression_table(gæt4)
+get_regression_summaries(gæt4)
+gæt5 <- lm(NDVI ~ climate_zone+season+moisture_yearly, data = data1)
+get_regression_table(gæt5)
+get_regression_summaries(gæt5)
+gæt6 <- lm(NDVI ~ climate_zone+season+air_temperature_yearly, data = data1)
+get_regression_table(gæt6)
+get_regression_summaries(gæt6)
+
+
+
+
+Gæt <-lm(NDVI~climate_zone+season+prev_month_air_temperature+prev_month_soil_temperature+prev_month_moisture,data = data1)
+get_regression_summaries(Gæt)
+
+F_test <- function(lm_null, lm_full) {
+  p <- lm_full$rank
+  q <- lm_null$rank
+  
+  numerator <- lm_full$df.residual * sum((lm_full$fitted.values -lm_null$fitted.values)^2)
+  denominator <- sum(lm_full$residuals^2)*(p-q)
+  
+  return(numerator/denominator)
+}
+
+
+
+statics_lm_stor <- lm(NDVI~ climate_zone+season+prev_month_air_temperature, data = data1)
+statics_lm <- lm(NDVI~ climate_zone + season, data = data1)
+F_obs <- F_test(statics_lm, statics_lm_stor)
+B <- 1000
+X0 <- model.matrix(statics_lm)
+X1 <- model.matrix(statics_lm_stor)
+statics_boot <- tibble(residuals = residuals(statics_lm)) %>%
+  rep_sample_n(size = nrow(data1), replace = TRUE, reps = B) %>%
+  mutate(y = fitted(statics_lm) + residuals) %>%
+  summarize(F = F_test(lm.fit(X0, y), lm.fit(X1, y)))
+
+
+ggplot(data=statics_boot) +
+  geom_histogram(mapping = aes(x=F))
+
+
+statics_boot %>%
+  get_p_value(obs_stat = F_obs, direction = "both")
+
+
+
+
+
 ```
 

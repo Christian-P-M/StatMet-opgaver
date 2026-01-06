@@ -1,0 +1,64 @@
+---
+title: "Untitled"
+author: "Christian Præst Møller"
+date: "2026-01-06"
+output: html_document
+---
+
+3.9
+(1)
+6 factorer må være 6 dimensioner
+
+
+
+
+
+```{r}
+library(readr)
+library(tidyverse)
+library(infer)
+library(moderndive)
+sphagnum <- read_table("data/data/sphagnum.txt", 
+    col_types = cols(stype = col_factor(levels = c("1", 
+        "2", "3", "4", "5", "6", "7", "8", 
+        "9", "10", "11", "12")), tray = col_factor(levels = c("1", 
+        "2", "3", "4", "5", "6"))))
+
+
+
+sphagnum|>
+  group_by(tray) |>
+  summarize(n())
+
+
+bud1<- lm(volume ~ tray, data = sphagnum)
+get_regression_table(bud1)
+
+bud2<- lm(volume ~ factor(tray), data = sphagnum)
+get_regression_table(bud2)
+#(5) koden ændre ikke noget når man importere sin data korrekt.
+sphagnum <- mutate(sphagnum, tray = factor(tray))
+levels(sphagnum$tray) <- paste("Tray", 1:6, sep = "_")
+
+#6 produktfactoren kan ikke være surjektiv da hver tray kun har 8 målinger men der er 12 stypes
+
+#7 Bare om man har intercept med eller ej. Ikke noget crazy men er vigtigt alt efter hvad man vil Sammenligne i modellen
+sphagnum <- mutate(sphagnum, tray = factor(tray), stype = factor(stype))
+get_regression_table(lm(volume ~ stype:tray, data = sphagnum))
+get_regression_table(lm(volume ~ stype:tray- 1, data = sphagnum))
+```
+3.10
+
+```{r}
+library(readr)
+ilulissat_temp <- read_table("data/data/ilulissat_temp.txt")
+
+
+ilulissat_temp <- mutate(ilulissat_temp, "hyear" = year-1950)
+hest <- lm(temp ~ hyear, data = ilulissat_temp)
+get_regression_table(hest)
+
+
+
+```
+
